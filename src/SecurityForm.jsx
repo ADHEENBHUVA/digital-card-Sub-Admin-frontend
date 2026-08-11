@@ -30,7 +30,7 @@ export default function SecurityForm() {
 
         setPasswordSaving(true);
         try {
-            await axios.post('http://localhost:5000/api/auth/change-password', {
+            await axios.post(import.meta.env.VITE_API_URL + '/api/auth/change-password', {
                 newPassword: passwordData.newPassword
             }, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }

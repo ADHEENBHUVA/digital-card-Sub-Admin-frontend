@@ -19,7 +19,7 @@ export default function DigitalCardConfig() {
     useEffect(() => {
         const fetchCard = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/digital-card/my-card', {
+                const response = await axios.get(import.meta.env.VITE_API_URL + '/api/digital-card/my-card', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
                 const data = response.data;
@@ -40,7 +40,7 @@ export default function DigitalCardConfig() {
 
     const getMediaUrl = (url) => {
         if (!url) return '';
-        if (url.startsWith('/uploads')) return `http://localhost:5000${url}`;
+        if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL}${url}`;
         return url;
     };
 
@@ -121,7 +121,7 @@ export default function DigitalCardConfig() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            await axios.put('http://localhost:5000/api/digital-card/my-card', formData, {
+            await axios.put(import.meta.env.VITE_API_URL + '/api/digital-card/my-card', formData, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
             });
             toast.success('Digital Card updated successfully');

@@ -11,10 +11,10 @@ export default function QrPanel() {
     useEffect(() => {
         const fetchQrData = async () => {
             try {
-                const qrRes = await axios.get('http://localhost:5000/api/sub-admin/qr', {
+                const qrRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/qr', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
-                const nfcRes = await axios.get('http://localhost:5000/api/sub-admin/nfc', {
+                const nfcRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/nfc', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
                 setData({ qrCodeUrl: qrRes.data.qrCodeUrl, nfcUrl: nfcRes.data.nfcUrl });
@@ -40,7 +40,7 @@ export default function QrPanel() {
 
             const img = new Image();
             img.crossOrigin = "Anonymous";
-            img.src = `http://localhost:5000${data.qrCodeUrl}`;
+            img.src = `${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`;
 
             img.onload = () => {
                 doc.addImage(img, 'PNG', 55, 50, 100, 100);
@@ -57,7 +57,7 @@ export default function QrPanel() {
 
     const handleDownloadPng = async () => {
         try {
-            const response = await fetch(`http://localhost:5000${data.qrCodeUrl}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`);
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -105,7 +105,7 @@ export default function QrPanel() {
                         <div className="group relative">
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-3xl blur opacity-25 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative p-6 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center">
-                                <img src={`http://localhost:5000${data.qrCodeUrl}`} alt="Permanent QR Code" className="w-64 h-64 object-contain brightness-100 dark:brightness-200 dark:contrast-200 dark:grayscale dark:invert" />
+                                <img src={`${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`} alt="Permanent QR Code" className="w-64 h-64 object-contain brightness-100 dark:brightness-200 dark:contrast-200 dark:grayscale dark:invert" />
                                 <div className="mt-6 flex items-center justify-center gap-3 w-full">
                                     <button
                                         onClick={handleDownloadPng}

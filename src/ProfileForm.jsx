@@ -16,7 +16,7 @@ export default function ProfileForm() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/sub-admin/profile', {
+                const response = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/profile', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
                 const data = response.data;
@@ -60,7 +60,7 @@ export default function ProfileForm() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            await axios.put('http://localhost:5000/api/sub-admin/profile', formData, {
+            await axios.put(import.meta.env.VITE_API_URL + '/api/sub-admin/profile', formData, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
             });
             toast.success('Profile updated successfully');

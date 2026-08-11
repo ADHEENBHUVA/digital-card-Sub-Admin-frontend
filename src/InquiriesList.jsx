@@ -10,7 +10,7 @@ export default function InquiriesList() {
     const fetchInquiries = async () => {
         try {
             const token = localStorage.getItem('subAdminToken');
-            const res = await axios.get('http://localhost:5000/api/digital-card/inquiries', {
+            const res = await axios.get(import.meta.env.VITE_API_URL + '/api/digital-card/inquiries', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setInquiries(res.data);
@@ -28,7 +28,7 @@ export default function InquiriesList() {
     const markAsRead = async (id) => {
         try {
             const token = localStorage.getItem('subAdminToken');
-            await axios.patch(`http://localhost:5000/api/digital-card/inquiries/${id}/read`, {}, {
+            await axios.patch(`${import.meta.env.VITE_API_URL}/api/digital-card/inquiries/${id}/read`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchInquiries();
