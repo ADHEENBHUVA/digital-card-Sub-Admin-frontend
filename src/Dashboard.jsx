@@ -25,7 +25,6 @@ export default function Dashboard() {
         { path: '/', label: 'Overview', icon: LayoutDashboard },
         { path: '/profile', label: 'Profile Editor', icon: User },
         { path: '/digital-card', label: 'Digital Card', icon: Layout },
-        { path: '/inquiries', label: 'Inquiries', icon: Inbox },
         { path: '/security', label: 'Security', icon: KeyRound },
         { path: '/qr-nfc', label: 'QR & NFC Links', icon: QrCode },
     ];

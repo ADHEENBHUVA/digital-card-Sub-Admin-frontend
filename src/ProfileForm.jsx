@@ -8,7 +8,7 @@ export default function ProfileForm() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: '', mobile: '', email: '',
-        profile: { companyName: '', designation: '' }
+        profile: { companyName: '', designation: '', address: '' }
     });
     const [loading, setLoading] = useState(true);
     const [views, setViews] = useState({ digitalCard: 0, landingPage: 0 });
@@ -16,7 +16,7 @@ export default function ProfileForm() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/profile', {
+                const response = await axios.get(import.meta.env.VITE_API_URL + '/api/auth/profile', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
                 const data = response.data;
@@ -26,7 +26,8 @@ export default function ProfileForm() {
                     email: data.email || '',
                     profile: {
                         companyName: data.profile?.companyName || '',
-                        designation: data.profile?.designation || ''
+                        designation: data.profile?.designation || '',
+                        address: data.profile?.address || ''
                     }
                 });
 
@@ -140,6 +141,10 @@ export default function ProfileForm() {
                             <div className="col-span-1 md:col-span-2 group">
                                 <label className="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 transition-colors">Company Name</label>
                                 <input type="text" name="companyName" value={formData.profile.companyName} onChange={(e) => handleChange(e, 'profile')} className="w-full bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 dark:text-white py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" />
+                            </div>
+                            <div className="col-span-1 md:col-span-2 group">
+                                <label className="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 group-focus-within:text-primary transition-colors">Business / Office Address</label>
+                                <textarea name="address" value={formData.profile.address} onChange={(e) => handleChange(e, 'profile')} rows="3" className="w-full bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 dark:text-white py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm resize-none" placeholder="Enter full address..."></textarea>
                             </div>
                         </div>
 

@@ -180,7 +180,7 @@ export default function DashboardHome() {
                         <div className="flex-1 w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden min-h-[350px]">
                             {slug ? (
                                 <iframe
-                                    src={`http://localhost:5173/${slug}`}
+                                    src={`http://localhost:5175/${slug}`}
                                     className="absolute inset-0 w-full h-full border-0 block"
                                     title="Live Preview"
                                 />
@@ -190,7 +190,7 @@ export default function DashboardHome() {
                         </div>
 
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => window.open(`http://localhost:5173/${slug}`, '_blank')} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-600 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors cursor-pointer">
+                            <button onClick={() => window.open(`http://localhost:5175/${slug}`, '_blank')} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-600 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors cursor-pointer">
                                 Open Full Card
                             </button>
                             <button onClick={() => window.location.href = '/digital-card'} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] cursor-pointer">

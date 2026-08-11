@@ -11,7 +11,6 @@ import SecurityForm from './SecurityForm';
 import QrPanel from './QrPanel';
 import DigitalCardConfig from './DigitalCardConfig';
 import DashboardHome from './DashboardHome';
-import InquiriesList from './InquiriesList';
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('subAdminToken');
@@ -25,7 +24,10 @@ const AxiosInterceptorProvider = ({ children }) => {
         const interceptor = axios.interceptors.response.use(
             (response) => response,
             (error) => {
-                if (error.response && error.response.status === 401) {
+                const originalRequest = error.config;
+                const isLoginReq = originalRequest && originalRequest.url && originalRequest.url.includes('/login');
+
+                if (error.response && error.response.status === 401 && !isLoginReq) {
                     const errorCode = error.response.data?.code;
 
                     let errorMessage = 'Your session is no longer valid. Please login again.'; // default
@@ -40,6 +42,7 @@ const AxiosInterceptorProvider = ({ children }) => {
 
                     localStorage.removeItem('subAdminToken');
                     localStorage.removeItem('subAdminUser');
+                    toast.dismiss(); // Clear any existing toasts to avoid duplicates
                     toast.error(errorMessage, { autoClose: 5000 });
                     navigate('/login');
                 }
@@ -67,7 +70,6 @@ function App() {
                         <Route path="security" element={<SecurityForm />} />
                         <Route path="digital-card" element={<DigitalCardConfig />} />
                         <Route path="qr-nfc" element={<QrPanel />} />
-                        <Route path="inquiries" element={<InquiriesList />} />
                     </Route>
 
                 </Routes>

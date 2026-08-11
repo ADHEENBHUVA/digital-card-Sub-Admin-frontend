@@ -38,6 +38,7 @@ export default function Login() {
             toast.success('Login Successful');
             navigate('/');
         } catch (error) {
+            toast.dismiss();
             toast.error(error.response?.data?.message || 'Login Failed');
         }
     };
