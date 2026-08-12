@@ -11,7 +11,7 @@ export default function DigitalCardConfig() {
         mainSection: { about: '', highlights: '' },
         contact: { phone: '', whatsapp: '', email: '', website: '', address: '', googleMap: '', inquiry: '' },
         socialLinks: { facebook: '', instagram: '', youtube: '', linkedin: '', twitter: '', telegram: '' },
-        footer: { businessName: '', tagline: '', copyright: '' },
+        footer: { businessName: '', tagline: '', copyright: '', backgroundColor: '' },
         design: { primaryColor: '#3b82f6', backgroundColor: '#ffffff', textColor: '#1e293b' }
     });
     const [loading, setLoading] = useState(true);
@@ -398,9 +398,16 @@ export default function DigitalCardConfig() {
                             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 tracking-tight flex items-center gap-2">Footer Setup <Layout size={18} className="text-slate-400" /></h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="group md:col-span-2">
+                            <div className="group">
                                 <label className="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 group-focus-within:text-emerald-500 transition-colors">Footer Company Name</label>
                                 <input type="text" name="businessName" value={formData.footer?.businessName || ''} onChange={(e) => handleChange(e, 'footer')} placeholder="Enter the company name to show in the footer" className="w-full bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 dark:text-white py-3 px-4 rounded-xl focus:ring-2 focus:ring-emerald-500/20" />
+                            </div>
+                            <div className="group">
+                                <label className="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 group-focus-within:text-emerald-500 transition-colors">Footer Background Color (Optional)</label>
+                                <div className="flex bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 p-2 items-center gap-3">
+                                    <input type="color" name="backgroundColor" value={formData.footer?.backgroundColor || '#000000'} onChange={(e) => handleChange(e, 'footer')} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+                                    <input type="text" name="backgroundColor" value={formData.footer?.backgroundColor || ''} onChange={(e) => handleChange(e, 'footer')} placeholder="Inherits Theme Color if empty" className="flex-1 bg-transparent dark:text-white outline-none text-sm font-medium" />
+                                </div>
                             </div>
                         </div>
                     </section>

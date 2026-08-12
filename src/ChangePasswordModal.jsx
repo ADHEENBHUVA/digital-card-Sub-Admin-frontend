@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { ShieldAlert, KeyRound, Loader2, Info } from 'lucide-react';
 import PasswordInput from './components/PasswordInput';
 
-export default function ChangePasswordModal({ userId, onSuccess, onCancel, currentPasswordProvided }) {
+export default function ChangePasswordModal({ token, onSuccess, onCancel, currentPasswordProvided }) {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -24,10 +24,12 @@ export default function ChangePasswordModal({ userId, onSuccess, onCancel, curre
         }
 
         try {
-            const token = localStorage.getItem('subAdminToken');
+            // Use the injected temporary token if provided for first-time login, otherwise fallback to local storage for standard resets
+            const authToken = token || localStorage.getItem('subAdminToken');
+
             await axios.post(import.meta.env.VITE_API_URL + '/api/auth/change-password',
                 { newPassword },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${authToken}` } }
             );
             onSuccess();
         } catch (error) {
