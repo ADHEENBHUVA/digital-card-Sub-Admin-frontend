@@ -12,29 +12,24 @@ export default function DashboardHome() {
     const [slug, setSlug] = useState('');
     const [trafficData, setTrafficData] = useState([]);
 
-    const generateTrafficData = (totalCard, totalLp) => {
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        let remainingCard = totalCard;
-        let remainingLp = totalLp;
+    const generateTrafficData = (dailyViews = []) => {
+        const result = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const name = d.toLocaleDateString('en-US', { weekday: 'short' });
 
-        return days.map((day, i) => {
-            let card = 0, lp = 0;
-            if (i === 6) {
-                card = remainingCard;
-                lp = remainingLp;
-            } else if (remainingCard > 0 || remainingLp > 0) {
-                card = Math.floor(Math.random() * (remainingCard / (7 - i)) * 1.5);
-                lp = Math.floor(Math.random() * (remainingLp / (7 - i)) * 1.5);
+            const stat = dailyViews.find(dv => dv.date === dateStr);
 
-                // Ensure we don't exceed remaining bounds
-                card = Math.min(card, remainingCard);
-                lp = Math.min(lp, remainingLp);
-
-                remainingCard -= card;
-                remainingLp -= lp;
-            }
-            return { name: day, card, lp, total: card + lp };
-        });
+            result.push({
+                name: name,
+                card: stat ? stat.digitalCard : 0,
+                lp: stat ? stat.landingPage : 0,
+                total: stat ? (stat.digitalCard + stat.landingPage) : 0
+            });
+        }
+        return result;
     };
 
     useEffect(() => {
@@ -53,7 +48,7 @@ export default function DashboardHome() {
                 });
 
                 if (profile.slug) setSlug(profile.slug);
-                setTrafficData(generateTrafficData(views.digitalCard || 0, views.landingPage || 0));
+                setTrafficData(generateTrafficData(profile.dailyViews || []));
 
             } catch (error) {
                 console.error("Dashboard data error", error);
@@ -126,7 +121,6 @@ export default function DashboardHome() {
 
             {/* Charts & Preview Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Area Chart */}
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none relative overflow-hidden">
                     <div className="flex justify-between items-center mb-8">
                         <div>
@@ -142,26 +136,47 @@ export default function DashboardHome() {
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={trafficData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <AreaChart data={trafficData} margin={{ top: 20, right: 20, left: -20, bottom: 10 }}>
                                     <defs>
                                         <linearGradient id="colorCard" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
                                         </linearGradient>
                                         <linearGradient id="colorLp" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} allowDecimals={false} domain={[0, 'dataMax + 2']} />
+                                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#94a3b8" opacity={0.15} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} dy={5} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }} allowDecimals={false} domain={[0, 'dataMax + 5']} />
                                     <Tooltip
-                                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
-                                        cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                        contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: '#ffffff', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', fontWeight: '600', padding: '12px 16px' }}
+                                        itemStyle={{ padding: '4px 0' }}
+                                        cursor={{ stroke: '#cbd5e1', strokeWidth: 2, strokeDasharray: '4 4' }}
                                     />
-                                    <Area type="monotone" dataKey="card" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCard)" name="Card Scans" />
-                                    <Area type="monotone" dataKey="lp" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorLp)" name="Page Views" />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="card"
+                                        stroke="#3b82f6"
+                                        strokeWidth={4}
+                                        fillOpacity={1}
+                                        fill="url(#colorCard)"
+                                        name="Card Scans"
+                                        animationDuration={2000}
+                                        activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6', filter: 'drop-shadow(0px 4px 6px rgba(59, 130, 246, 0.5))' }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="lp"
+                                        stroke="#10b981"
+                                        strokeWidth={4}
+                                        fillOpacity={1}
+                                        fill="url(#colorLp)"
+                                        name="Page Views"
+                                        animationDuration={2000}
+                                        activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981', filter: 'drop-shadow(0px 4px 6px rgba(16, 185, 129, 0.5))' }}
+                                    />
                                 </AreaChart>
                             </ResponsiveContainer>
                         )}
@@ -180,7 +195,7 @@ export default function DashboardHome() {
                         <div className="flex-1 w-full bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden min-h-[350px]">
                             {slug ? (
                                 <iframe
-                                    src={`http://localhost:5175/${slug}`}
+                                    src={`http://localhost:5175/${slug}?preview=true`}
                                     className="absolute inset-0 w-full h-full border-0 block"
                                     title="Live Preview"
                                 />
