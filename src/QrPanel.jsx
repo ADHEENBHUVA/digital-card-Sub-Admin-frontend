@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { QrCode, Link as LinkIcon, Download, Copy, ScanLine, FileText } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Download, Copy, ScanLine, FileText, Wifi } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 export default function QrPanel() {
-    const [data, setData] = useState({ qrCodeUrl: '', nfcUrl: '' });
+    const [data, setData] = useState({ qrCodeUrl: '', nfcUrl: '', nfcEnabled: false, uniqueToken: null, isActive: false });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -17,7 +17,13 @@ export default function QrPanel() {
                 const nfcRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/nfc', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
-                setData({ qrCodeUrl: qrRes.data.qrCodeUrl, nfcUrl: nfcRes.data.nfcUrl });
+                setData({
+                    qrCodeUrl: qrRes.data.qrCodeUrl,
+                    nfcUrl: nfcRes.data.nfcUrl,
+                    nfcEnabled: nfcRes.data.nfcEnabled,
+                    uniqueToken: nfcRes.data.uniqueToken,
+                    isActive: nfcRes.data.isActive
+                });
             } catch (err) {
                 toast.error('Failed to load QR/NFC data');
             } finally {
@@ -27,9 +33,25 @@ export default function QrPanel() {
         fetchQrData();
     }, []);
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(data.nfcUrl);
+    const copyToClipboard = (forceUrl) => {
+        navigator.clipboard.writeText(forceUrl || data.nfcUrl);
         toast.success("Link copied directly to clipboard!");
+    };
+
+    const handleWriteNfc = async (url) => {
+        if ('NDEFReader' in window) {
+            try {
+                const ndef = new window.NDEFReader();
+                await ndef.write({
+                    records: [{ recordType: "url", data: url }]
+                });
+                toast.success("Successfully wrote URL to physical NFC Card!");
+            } catch (error) {
+                toast.error("Error writing to NFC: " + error.message);
+            }
+        } else {
+            toast.info("Web NFC is not supported on this device/browser. Please use Chrome on Android to write physically, or use a 3rd party NFC app to write the copied URL.");
+        }
     };
 
     const handleDownloadPdf = () => {
@@ -131,35 +153,63 @@ export default function QrPanel() {
                     )}
 
                     {/* NFC Link Container */}
-                    {/* NFC Link Container */}
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border border-blue-100 dark:border-slate-700 p-4 sm:p-6 rounded-2xl w-full text-left relative overflow-hidden shadow-sm transition-colors">
                         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-blue-100 dark:from-slate-700/20 to-transparent pointer-events-none hidden sm:block"></div>
 
-                        <div className="flex flex-col sm:flex-row items-start gap-4">
-                            <div className="bg-white dark:bg-slate-700/50 p-3 rounded-full shadow-sm shrink-0">
-                                <LinkIcon className="text-primary dark:text-blue-400 w-6 h-6" />
-                            </div>
-                            <div className="flex-1 w-full sm:pr-16 min-w-0">
-                                <h4 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-1">Permanent Landing Router (NFC Link)</h4>
-                                <div className="group flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white dark:bg-slate-900/50 border border-blue-200 dark:border-slate-700 rounded-xl px-4 py-3 mt-3 shadow-inner gap-3 sm:gap-0">
-                                    <a href={data.nfcUrl} target="_blank" rel="noreferrer" className="text-primary dark:text-blue-400 font-medium hover:underline break-all sm:break-normal">
-                                        {data.nfcUrl}
-                                    </a>
-                                    <button
-                                        onClick={copyToClipboard}
-                                        className="text-slate-400 hover:text-primary dark:hover:text-amber-400 transition-colors sm:ml-4 p-2 focus:outline-none self-end sm:self-auto flex items-center gap-2"
-                                        title="Copy URL"
-                                    >
-                                        <Copy size={18} />
-                                        <span className="sm:hidden text-sm font-semibold">Copy</span>
-                                    </button>
+                        {data.nfcEnabled && data.uniqueToken ? (
+                            <div className="flex flex-col sm:flex-row items-start gap-4">
+                                <div className="bg-white dark:bg-slate-700/50 p-3 rounded-full shadow-sm shrink-0">
+                                    <LinkIcon className="text-primary dark:text-blue-400 w-6 h-6" />
                                 </div>
-                                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-4 leading-relaxed bg-white/60 dark:bg-slate-800/80 inline-block px-3 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-700">
-                                    <span className="text-amber-500 font-bold mr-1">NOTE:</span>
-                                    Encode this exact URL directly onto physical NFC cards.
-                                </p>
+                                <div className="flex-1 w-full sm:pr-16 min-w-0">
+                                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-1 flex items-center gap-2">
+                                        NFC Physical Card Endpoint
+                                        <span className={`text-xs px-2 py-0.5 rounded-full text-white font-semibold ${data.isActive ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                                            {data.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                        </span>
+                                    </h4>
+                                    <div className="group flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white dark:bg-slate-900/50 border border-blue-200 dark:border-slate-700 rounded-xl px-4 py-3 mt-3 shadow-inner gap-3 sm:gap-0">
+                                        <a href={`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175` : window.location.origin}/card/${data.uniqueToken}`} target="_blank" rel="noreferrer" className="text-primary dark:text-blue-400 font-medium hover:underline break-all sm:break-normal line-clamp-1">
+                                            {`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175` : window.location.origin}/card/${data.uniqueToken}`}
+                                        </a>
+                                        <div className="flex gap-2 self-end sm:self-auto w-full sm:w-auto">
+                                            <button
+                                                onClick={() => {
+                                                    const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175/card/${data.uniqueToken}` : `${window.location.origin}/card/${data.uniqueToken}`;
+                                                    copyToClipboard(url);
+                                                }}
+                                                className="flex-1 sm:flex-initial text-slate-500 hover:text-primary dark:hover:text-amber-400 transition-colors p-2 bg-slate-100 hover:bg-blue-50 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
+                                                title="Copy URL"
+                                            >
+                                                <Copy size={16} />
+                                                <span className="sm:hidden text-xs font-semibold">Copy</span>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175/card/${data.uniqueToken}` : `${window.location.origin}/card/${data.uniqueToken}`;
+                                                    handleWriteNfc(url);
+                                                }}
+                                                className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
+                                                title="Write to NFC"
+                                            >
+                                                <Wifi size={16} />
+                                                <span className="text-xs font-semibold whitespace-nowrap">Write NFC</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-4 leading-relaxed bg-white/60 dark:bg-slate-800/80 inline-block px-3 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-700">
+                                        <span className="text-amber-500 font-bold mr-1">NOTE:</span>
+                                        Encode this exact URL directly onto physical NFC cards.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-6 text-slate-500">
+                                <ScanLine className="w-12 h-12 mb-3 opacity-50" />
+                                <h4 className="font-bold text-lg">NFC Not Generated</h4>
+                                <p className="text-sm">Please contact your Master Administrator to enable and assign an NFC Card token for your digital profile.</p>
+                            </div>
+                        )}
                     </div>
 
                 </div>
