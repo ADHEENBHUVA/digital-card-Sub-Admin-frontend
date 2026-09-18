@@ -3,6 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { useEffect } from 'react';
+import useTheme from './hooks/useTheme';
 
 import React, { Suspense, lazy } from 'react';
 
@@ -57,8 +58,6 @@ const AxiosInterceptorProvider = ({ children }) => {
 
     return children;
 };
-
-import useTheme from './hooks/useTheme';
 
 function App() {
     const { theme } = useTheme();
