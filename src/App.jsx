@@ -4,13 +4,15 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { useEffect } from 'react';
 
-import Login from './Login';
-import Dashboard from './Dashboard';
-import ProfileForm from './ProfileForm';
-import SecurityForm from './SecurityForm';
-import QrPanel from './QrPanel';
-import DigitalCardConfig from './DigitalCardConfig';
-import DashboardHome from './DashboardHome';
+import React, { Suspense, lazy } from 'react';
+
+const Login = lazy(() => import('./Login'));
+const Dashboard = lazy(() => import('./Dashboard'));
+const ProfileForm = lazy(() => import('./ProfileForm'));
+const SecurityForm = lazy(() => import('./SecurityForm'));
+const QrPanel = lazy(() => import('./QrPanel'));
+const DigitalCardConfig = lazy(() => import('./DigitalCardConfig'));
+const DashboardHome = lazy(() => import('./DashboardHome'));
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('subAdminToken');
@@ -65,18 +67,20 @@ function App() {
         <Router>
             <AxiosInterceptorProvider>
                 <ToastContainer position="top-right" theme={theme === 'dark' ? 'dark' : 'light'} />
-                <Routes>
-                    <Route path="/login" element={<Login />} />
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f8fafc] text-slate-500 font-medium">Loading...</div>}>
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
 
-                    <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>}>
-                        <Route index element={<DashboardHome />} />
-                        <Route path="profile" element={<ProfileForm />} />
-                        <Route path="security" element={<SecurityForm />} />
-                        <Route path="digital-card" element={<DigitalCardConfig />} />
-                        <Route path="qr-nfc" element={<QrPanel />} />
-                    </Route>
+                        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>}>
+                            <Route index element={<DashboardHome />} />
+                            <Route path="profile" element={<ProfileForm />} />
+                            <Route path="security" element={<SecurityForm />} />
+                            <Route path="digital-card" element={<DigitalCardConfig />} />
+                            <Route path="qr-nfc" element={<QrPanel />} />
+                        </Route>
 
-                </Routes>
+                    </Routes>
+                </Suspense>
             </AxiosInterceptorProvider>
         </Router>
     );
