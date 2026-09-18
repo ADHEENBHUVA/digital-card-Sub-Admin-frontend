@@ -78,7 +78,7 @@ export default function DigitalCardConfig() {
         });
     };
 
-    const handleFileChange = (e, section, name) => {
+    const handleFileChange = async (e, section, name) => {
         const file = e.target.files[0];
         if (!file) {
             toast.error("Invalid or empty file.");
@@ -109,13 +109,36 @@ export default function DigitalCardConfig() {
             return;
         }
 
-        // Read using FileReader to preview. Real implementation would ideally use createObjectURL, 
-        // but since we transport as Base64 to bypass constraints, we safely extract string.
+        // Create temporary preview immediately
         const reader = new FileReader();
         reader.onloadend = () => {
-            setFormData({ ...formData, [section]: { ...formData[section], [name]: reader.result } });
+            setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: reader.result } }));
         };
         reader.readAsDataURL(file);
+
+        // Upload to Cloudinary Directly
+        try {
+            toast.info(`Uploading media... Please wait.`);
+            const sigRes = await axios.get(import.meta.env.VITE_API_URL + '/api/digital-card/cloudinary-signature', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
+            });
+            
+            const { signature, timestamp, cloudName, apiKey } = sigRes.data;
+            const uploadData = new FormData();
+            uploadData.append('file', file);
+            uploadData.append('api_key', apiKey);
+            uploadData.append('timestamp', timestamp);
+            uploadData.append('signature', signature);
+            uploadData.append('folder', 'digital-card');
+
+            const uploadRes = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, uploadData);
+            
+            setFormData(prev => ({ ...prev, [section]: { ...prev[section], [name]: uploadRes.data.secure_url } }));
+            toast.success(`Media uploaded successfully! Please click Save Changes.`);
+        } catch (err) {
+            toast.error(`Failed to upload media. Please try again.`);
+            console.error(err);
+        }
     };
 
     const handleUpdate = async (e) => {
