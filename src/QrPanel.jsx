@@ -169,13 +169,13 @@ export default function QrPanel() {
                                         </span>
                                     </h4>
                                     <div className="group flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white dark:bg-slate-900/50 border border-blue-200 dark:border-slate-700 rounded-xl px-4 py-3 mt-3 shadow-inner gap-3 sm:gap-0">
-                                        <a href={`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175` : window.location.origin}/card/${data.uniqueToken}`} target="_blank" rel="noreferrer" className="text-primary dark:text-blue-400 font-medium hover:underline break-all sm:break-normal line-clamp-1">
-                                            {`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175` : window.location.origin}/card/${data.uniqueToken}`}
+                                        <a href={import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`} target="_blank" rel="noreferrer" className="text-primary dark:text-blue-400 font-medium hover:underline break-all sm:break-normal line-clamp-1">
+                                            {import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`}
                                         </a>
                                         <div className="flex gap-2 self-end sm:self-auto w-full sm:w-auto">
                                             <button
                                                 onClick={() => {
-                                                    const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175/card/${data.uniqueToken}` : `${window.location.origin}/card/${data.uniqueToken}`;
+                                                    const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
                                                     copyToClipboard(url);
                                                 }}
                                                 className="flex-1 sm:flex-initial text-slate-500 hover:text-primary dark:hover:text-amber-400 transition-colors p-2 bg-slate-100 hover:bg-blue-50 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
@@ -186,7 +186,7 @@ export default function QrPanel() {
                                             </button>
                                             <button
                                                 onClick={() => {
-                                                    const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? `http://${window.location.hostname}:5175/card/${data.uniqueToken}` : `${window.location.origin}/card/${data.uniqueToken}`;
+                                                    const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
                                                     handleWriteNfc(url);
                                                 }}
                                                 className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
