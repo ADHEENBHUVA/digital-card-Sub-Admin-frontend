@@ -3,10 +3,19 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { QrCode, Link as LinkIcon, Download, Copy, ScanLine, FileText, Wifi } from 'lucide-react';
 import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 
 export default function QrPanel() {
     const [data, setData] = useState({ qrCodeUrl: '', nfcUrl: '', nfcEnabled: false, uniqueToken: null, isActive: false });
     const [loading, setLoading] = useState(true);
+    const [qrImage, setQrImage] = useState('');
+
+    const getMediaUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+        if (url.startsWith('/')) return `${import.meta.env.VITE_API_URL}${url}`;
+        return `${import.meta.env.VITE_API_URL}/${url}`;
+    };
 
     useEffect(() => {
         const fetchQrData = async () => {
@@ -24,6 +33,16 @@ export default function QrPanel() {
                     uniqueToken: nfcRes.data.uniqueToken,
                     isActive: nfcRes.data.isActive
                 });
+
+                // Generate QR Code dynamically to prevent broken image / missing file on server
+                const cardUrl = nfcRes.data.uniqueToken 
+                    ? (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${nfcRes.data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${nfcRes.data.uniqueToken}`)
+                    : nfcRes.data.nfcUrl || qrRes.data.qrCodeUrl;
+                
+                if (cardUrl) {
+                    const generatedQr = await QRCode.toDataURL(cardUrl, { width: 1024, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+                    setQrImage(generatedQr);
+                }
             } catch (err) {
                 toast.error('Failed to load QR/NFC data');
             } finally {
@@ -62,7 +81,7 @@ export default function QrPanel() {
 
             const img = new Image();
             img.crossOrigin = "Anonymous";
-            img.src = `${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`;
+            img.src = qrImage || getMediaUrl(data.qrCodeUrl);
 
             img.onload = () => {
                 doc.addImage(img, 'PNG', 55, 50, 100, 100);
@@ -79,7 +98,7 @@ export default function QrPanel() {
 
     const handleDownloadPng = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`);
+            const response = await fetch(qrImage || getMediaUrl(data.qrCodeUrl));
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -123,11 +142,11 @@ export default function QrPanel() {
                 <div className="flex flex-col items-center justify-center space-y-10">
 
                     {/* QR Code Container */}
-                    {data.qrCodeUrl ? (
+                    {(qrImage || data.qrCodeUrl) ? (
                         <div className="group relative">
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-3xl blur opacity-25 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative p-6 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center">
-                                <img src={`${import.meta.env.VITE_API_URL}${data.qrCodeUrl}`} alt="Permanent QR Code" className="w-64 h-64 object-contain brightness-100 dark:brightness-200 dark:contrast-200 dark:grayscale dark:invert" />
+                                <img src={qrImage || getMediaUrl(data.qrCodeUrl)} alt="Permanent QR Code" className="w-64 h-64 object-contain brightness-100 dark:brightness-200 dark:contrast-200 dark:grayscale dark:invert" />
                                 <div className="mt-6 flex items-center justify-center gap-3 w-full">
                                     <button
                                         onClick={handleDownloadPng}
