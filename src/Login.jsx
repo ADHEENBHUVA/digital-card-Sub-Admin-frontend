@@ -12,34 +12,43 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [tempAuthToken, setTempAuthToken] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        if (isLoading) return;
+        
+        setIsLoading(true);
+        const toastId = toast.loading("Logging in... Please wait");
+
         try {
             const response = await axios.post(import.meta.env.VITE_API_URL + '/api/auth/login', { username, password });
 
             if (response.data.role !== 'SUB_ADMIN') {
-                toast.error('Not authorized as Sub Admin');
+                toast.update(toastId, { render: 'Not authorized as Sub Admin', type: "error", isLoading: false, autoClose: 3000 });
+                setIsLoading(false);
                 return;
             }
 
             if (response.data.mustChangePassword) {
+                toast.update(toastId, { render: 'Please change your password', type: "info", isLoading: false, autoClose: 3000 });
                 setTempAuthToken(response.data.token);
                 setShowPasswordModal(true);
+                setIsLoading(false);
                 return;
             }
 
             localStorage.setItem('subAdminToken', response.data.token);
             localStorage.setItem('subAdminUser', JSON.stringify(response.data));
 
-            toast.success('Login Successful');
+            toast.update(toastId, { render: 'Login Successful', type: "success", isLoading: false, autoClose: 2000 });
             navigate('/');
         } catch (error) {
-            toast.dismiss();
-            toast.error(error.response?.data?.message || 'Login Failed');
+            toast.update(toastId, { render: error.response?.data?.message || 'Login Failed', type: "error", isLoading: false, autoClose: 3000 });
+            setIsLoading(false);
         }
     };
 
@@ -102,9 +111,18 @@ export default function Login() {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl py-3.5 font-bold tracking-wide hover:shadow-lg hover:shadow-cyan-500/30 hover:scale-[1.02] transform transition-all active:scale-[0.98]"
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white rounded-2xl py-4 font-bold tracking-wide shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5 transform transition-all active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:hover:translate-y-0 flex justify-center items-center gap-2"
                     >
-                        Sign In
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Logging in...
+                            </>
+                        ) : 'Secure Login'}
                     </button>
                 </form>
             </div>
