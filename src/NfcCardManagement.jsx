@@ -13,8 +13,8 @@ export default function NfcCardManagement() {
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
 
-    const fetchCards = async () => {
-        setLoading(true);
+    const fetchCards = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const response = await axios.get(import.meta.env.VITE_API_URL + '/api/nfc-cards', {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
@@ -22,14 +22,18 @@ export default function NfcCardManagement() {
             setCards(response.data.cards);
             setTotalCount(response.data.totalCount);
         } catch (err) {
-            toast.error('Failed to load NFC cards');
+            if (!silent) toast.error('Failed to load NFC cards');
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchCards();
+        const interval = setInterval(() => {
+            fetchCards(true);
+        }, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleToggleStatus = async (id, currentStatus) => {
