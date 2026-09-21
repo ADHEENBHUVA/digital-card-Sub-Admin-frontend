@@ -19,8 +19,19 @@ export default function NfcCardManagement() {
             const response = await axios.get(import.meta.env.VITE_API_URL + '/api/nfc-cards', {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
             });
-            setCards(response.data.cards);
-            setTotalCount(response.data.totalCount);
+            
+            // Only update state if data has actually changed to prevent UI lag
+            setCards(prevCards => {
+                if (JSON.stringify(prevCards) !== JSON.stringify(response.data.cards)) {
+                    return response.data.cards;
+                }
+                return prevCards;
+            });
+            
+            setTotalCount(prevCount => {
+                if (prevCount !== response.data.totalCount) return response.data.totalCount;
+                return prevCount;
+            });
         } catch (err) {
             if (!silent) toast.error('Failed to load NFC cards');
         } finally {

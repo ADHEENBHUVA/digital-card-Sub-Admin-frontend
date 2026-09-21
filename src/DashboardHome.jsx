@@ -34,30 +34,60 @@ export default function DashboardHome() {
     };
 
     useEffect(() => {
-        const fetchDashboardData = async () => {
+        let isMounted = true;
+        const fetchDashboardData = async (silent = false) => {
             try {
+                if (!silent) setLoading(true);
                 const response = await axios.get(import.meta.env.VITE_API_URL + '/api/auth/profile', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
 
+                if (!isMounted) return;
+
                 const profile = response.data;
                 const views = profile.views || { digitalCard: 0, landingPage: 0 };
 
-                setStats({
+                const newStats = {
                     cardViews: views.digitalCard || 0,
                     landingViews: views.landingPage || 0
+                };
+
+                setStats(prevStats => {
+                    if (JSON.stringify(prevStats) !== JSON.stringify(newStats)) {
+                        return newStats;
+                    }
+                    return prevStats;
                 });
 
-                if (profile.slug) setSlug(profile.slug);
-                setTrafficData(generateTrafficData(profile.dailyViews || []));
+                setSlug(prevSlug => {
+                    if (profile.slug && prevSlug !== profile.slug) return profile.slug;
+                    return prevSlug;
+                });
+                
+                const newTrafficData = generateTrafficData(profile.dailyViews || []);
+                setTrafficData(prevTraffic => {
+                    if (JSON.stringify(prevTraffic) !== JSON.stringify(newTrafficData)) {
+                        return newTrafficData;
+                    }
+                    return prevTraffic;
+                });
 
             } catch (error) {
                 console.error("Dashboard data error", error);
             } finally {
-                setLoading(false);
+                if (!silent && isMounted) setLoading(false);
             }
         };
+
         fetchDashboardData();
+        const interval = setInterval(() => {
+            fetchDashboardData(true);
+        }, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, []);
 
 
