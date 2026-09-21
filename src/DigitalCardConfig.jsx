@@ -51,13 +51,17 @@ export default function DigitalCardConfig() {
 
     const extractCountryCode = (phoneStr) => {
         if (!phoneStr) return '+91';
-        const match = phoneStr.match(/^(\+\d{1,4})\s?(.*)$/);
+        if (phoneStr.includes(' ')) return phoneStr.split(' ')[0];
+        if (phoneStr.startsWith('+91')) return '+91';
+        const match = phoneStr.match(/^(\+\d{1,3})(.*)$/);
         return match ? match[1] : '+91';
     };
 
     const extractPhoneNumber = (phoneStr) => {
         if (!phoneStr) return '';
-        const match = phoneStr.match(/^(\+\d{1,4})\s?(.*)$/);
+        if (phoneStr.includes(' ')) return phoneStr.substring(phoneStr.indexOf(' ') + 1);
+        if (phoneStr.startsWith('+91')) return phoneStr.substring(3);
+        const match = phoneStr.match(/^(\+\d{1,3})(.*)$/);
         return match ? match[2] : phoneStr;
     };
 
@@ -67,7 +71,7 @@ export default function DigitalCardConfig() {
         const currentCode = extractCountryCode(currentFull);
         const currentNum = extractPhoneNumber(currentFull);
 
-        const newFull = name === 'code' ? `${value}${currentNum}` : `${currentCode}${value}`;
+        const newFull = name === 'code' ? `${value} ${currentNum}` : `${currentCode} ${value}`;
 
         setFormData({
             ...formData,
