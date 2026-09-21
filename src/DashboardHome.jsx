@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Eye, TrendingUp, Smartphone, Globe, Share2, MousePointerClick } from 'lucide-react';
@@ -205,12 +206,12 @@ export default function DashboardHome() {
                         </div>
 
                         <div className="flex gap-3 mt-4">
-                            <button onClick={() => window.open(`${window.location.hostname === 'localhost' ? 'http://localhost:5175' : 'https://digital-card-customer-frontend.vercel.app'}/${slug}`, '_blank')} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-600 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors cursor-pointer">
+                            <a href={`${window.location.hostname === 'localhost' ? 'http://localhost:5175' : 'https://digital-card-customer-frontend.vercel.app'}/${slug}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-600 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors cursor-pointer text-center flex items-center justify-center">
                                 Open Full Card
-                            </button>
-                            <button onClick={() => window.location.href = '/digital-card'} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] cursor-pointer">
+                            </a>
+                            <Link to="/digital-card" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] cursor-pointer text-center flex items-center justify-center">
                                 Edit Card
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
