@@ -64,34 +64,35 @@ export default function QrPanel() {
     };
 
     const handleWriteNfc = async (url) => {
-        if ('NDEFReader' in window) {
-            try {
-                // 1. Register this new card to the backend to track it independently
-                const cardId = `NFC-${Math.floor(100000 + Math.random() * 900000)}`;
-                await axios.post(
-                    import.meta.env.VITE_API_URL + '/api/nfc-cards/write',
-                    { cardId, cardName: 'New Written Card' },
-                    { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } }
-                );
+        try {
+            // 1. Register this new card to the backend to track it independently
+            const cardId = `NFC-${Math.floor(100000 + Math.random() * 900000)}`;
+            await axios.post(
+                import.meta.env.VITE_API_URL + '/api/nfc-cards/write',
+                { cardId, cardName: 'New Written Card' },
+                { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } }
+            );
 
-                // 2. Append the cid to the URL to distinguish this specific physical card
-                const finalUrl = url + (url.includes('?') ? '&' : '?') + `cid=${cardId}`;
+            // 2. Append the cid to the URL to distinguish this specific physical card
+            const finalUrl = url + (url.includes('?') ? '&' : '?') + `cid=${cardId}`;
 
+            if ('NDEFReader' in window) {
                 // 3. Write to the physical NFC card
                 const ndef = new window.NDEFReader();
                 await ndef.write({
                     records: [{ recordType: "url", data: finalUrl }]
                 });
                 toast.success("Successfully wrote URL to physical NFC Card and registered it!");
-            } catch (error) {
-                if (error.response) {
-                    toast.error("Failed to register card: " + (error.response.data.error || "Unknown error"));
-                } else {
-                    toast.error("Error writing to NFC: " + error.message);
-                }
+            } else {
+                navigator.clipboard.writeText(finalUrl);
+                toast.success("Card Registered! Web NFC not supported, so the unique URL has been copied to your clipboard to write using an app.");
             }
-        } else {
-            toast.info("Web NFC is not supported on this device/browser. Please use Chrome on Android to write physically, or use a 3rd party NFC app to write the copied URL.");
+        } catch (error) {
+            if (error.response) {
+                toast.error("Failed to register card: " + (error.response.data.error || "Unknown error"));
+            } else {
+                toast.error("Error writing to NFC: " + error.message);
+            }
         }
     };
 
