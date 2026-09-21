@@ -60,39 +60,50 @@ export default function QrPanel() {
 
     const copyToClipboard = (forceUrl) => {
         navigator.clipboard.writeText(forceUrl || data.nfcUrl);
-        toast.success("Link copied directly to clipboard!");
+        toast.success("Base Link copied directly to clipboard!");
     };
 
-    const handleWriteNfc = async (url) => {
+    const registerNewCard = async () => {
+        const cardId = `NFC-${Math.floor(100000 + Math.random() * 900000)}`;
         try {
-            // 1. Register this new card to the backend to track it independently
-            const cardId = `NFC-${Math.floor(100000 + Math.random() * 900000)}`;
             await axios.post(
                 import.meta.env.VITE_API_URL + '/api/nfc-cards/write',
                 { cardId, cardName: 'New Written Card' },
                 { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } }
             );
+            return cardId;
+        } catch (error) {
+            toast.error("Failed to register card in system.");
+            return null;
+        }
+    };
 
-            // 2. Append the cid to the URL to distinguish this specific physical card
+    const handleGenerateAndCopy = async (url) => {
+        const cardId = await registerNewCard();
+        if (cardId) {
             const finalUrl = url + (url.includes('?') ? '&' : '?') + `cid=${cardId}`;
+            navigator.clipboard.writeText(finalUrl);
+            toast.success(`Generated New Card (${cardId}) URL and copied to clipboard!`);
+        }
+    };
 
-            if ('NDEFReader' in window) {
-                // 3. Write to the physical NFC card
+    const handleWriteNfc = async (url) => {
+        if ('NDEFReader' in window) {
+            const cardId = await registerNewCard();
+            if (!cardId) return;
+            
+            const finalUrl = url + (url.includes('?') ? '&' : '?') + `cid=${cardId}`;
+            try {
                 const ndef = new window.NDEFReader();
                 await ndef.write({
                     records: [{ recordType: "url", data: finalUrl }]
                 });
                 toast.success("Successfully wrote URL to physical NFC Card and registered it!");
-            } else {
-                navigator.clipboard.writeText(finalUrl);
-                toast.success("Card Registered! Web NFC not supported, so the unique URL has been copied to your clipboard to write using an app.");
-            }
-        } catch (error) {
-            if (error.response) {
-                toast.error("Failed to register card: " + (error.response.data.error || "Unknown error"));
-            } else {
+            } catch (error) {
                 toast.error("Error writing to NFC: " + error.message);
             }
+        } else {
+            toast.info("Web NFC is not supported. Use 'Generate & Copy (3rd Party App)' button instead.");
         }
     };
 
@@ -214,28 +225,28 @@ export default function QrPanel() {
                                         <a href={import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`} target="_blank" rel="noreferrer" className="text-primary dark:text-blue-400 font-medium hover:underline break-all sm:break-normal line-clamp-1">
                                             {import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`}
                                         </a>
-                                        <div className="flex gap-2 self-end sm:self-auto w-full sm:w-auto">
+                                        <div className="flex flex-wrap gap-2 self-end sm:self-auto w-full sm:w-auto">
                                             <button
                                                 onClick={() => {
                                                     const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
-                                                    copyToClipboard(url);
+                                                    handleGenerateAndCopy(url);
                                                 }}
-                                                className="flex-1 sm:flex-initial text-slate-500 hover:text-primary dark:hover:text-amber-400 transition-colors p-2 bg-slate-100 hover:bg-blue-50 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
-                                                title="Copy URL"
+                                                className="flex-1 sm:flex-initial text-slate-700 hover:text-blue-600 transition-colors px-3 py-2 bg-blue-50 hover:bg-blue-100 focus:outline-none flex items-center justify-center gap-2 rounded-lg border border-blue-200"
+                                                title="Generate Unique URL for 3rd Party NFC Writers"
                                             >
                                                 <Copy size={16} />
-                                                <span className="sm:hidden text-xs font-semibold">Copy</span>
+                                                <span className="text-xs font-semibold whitespace-nowrap">Generate & Copy (3rd Party App)</span>
                                             </button>
                                             <button
                                                 onClick={() => {
                                                     const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
                                                     handleWriteNfc(url);
                                                 }}
-                                                className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg"
-                                                title="Write to NFC"
+                                                className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg shadow-sm"
+                                                title="Write directly via Web NFC"
                                             >
                                                 <Wifi size={16} />
-                                                <span className="text-xs font-semibold whitespace-nowrap">Write NFC</span>
+                                                <span className="text-xs font-semibold whitespace-nowrap">Write (Web NFC)</span>
                                             </button>
                                         </div>
                                     </div>
