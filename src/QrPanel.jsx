@@ -20,27 +20,33 @@ export default function QrPanel() {
     useEffect(() => {
         const fetchQrData = async () => {
             try {
+                const profileRes = await axios.get(import.meta.env.VITE_API_URL + '/api/auth/profile', {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
+                });
                 const qrRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/qr', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
                 const nfcRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/nfc', {
                     headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
                 });
+
+                const slug = profileRes.data.slug || profileRes.data.username.split('@')[0];
+                
+                // Construct the actual live URL for this specific sub admin
+                const realCardUrl = nfcRes.data.uniqueToken 
+                    ? (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${nfcRes.data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${nfcRes.data.uniqueToken}`)
+                    : (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/${slug}` : `https://digital-card-customer-frontend.vercel.app/${slug}`);
+
                 setData({
                     qrCodeUrl: qrRes.data.qrCodeUrl,
-                    nfcUrl: nfcRes.data.nfcUrl,
+                    nfcUrl: realCardUrl,
                     nfcEnabled: nfcRes.data.nfcEnabled,
                     uniqueToken: nfcRes.data.uniqueToken,
                     isActive: nfcRes.data.isActive
                 });
 
-                // Generate QR Code dynamically to prevent broken image / missing file on server
-                const cardUrl = nfcRes.data.uniqueToken 
-                    ? (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${nfcRes.data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${nfcRes.data.uniqueToken}`)
-                    : nfcRes.data.nfcUrl || qrRes.data.qrCodeUrl;
-                
-                if (cardUrl) {
-                    const generatedQr = await QRCode.toDataURL(cardUrl, { width: 1024, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+                if (realCardUrl) {
+                    const generatedQr = await QRCode.toDataURL(realCardUrl, { width: 1024, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
                     setQrImage(generatedQr);
                 }
             } catch (err) {
