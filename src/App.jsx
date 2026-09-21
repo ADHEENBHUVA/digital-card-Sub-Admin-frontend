@@ -14,6 +14,7 @@ const SecurityForm = lazy(() => import('./SecurityForm'));
 const QrPanel = lazy(() => import('./QrPanel'));
 const DigitalCardConfig = lazy(() => import('./DigitalCardConfig'));
 const DashboardHome = lazy(() => import('./DashboardHome'));
+const NfcCardManagement = lazy(() => import('./NfcCardManagement'));
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('subAdminToken');
@@ -76,6 +77,7 @@ function App() {
                             <Route path="security" element={<SecurityForm />} />
                             <Route path="digital-card" element={<DigitalCardConfig />} />
                             <Route path="qr-nfc" element={<QrPanel />} />
+                            <Route path="nfc-cards" element={<NfcCardManagement />} />
                         </Route>
 
                     </Routes>

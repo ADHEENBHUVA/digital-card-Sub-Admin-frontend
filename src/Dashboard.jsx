@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, QrCode, LogOut, LayoutDashboard, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, KeyRound, Layout, Inbox } from 'lucide-react';
+import { User, QrCode, LogOut, LayoutDashboard, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, KeyRound, Layout, Inbox, CreditCard } from 'lucide-react';
 import useTheme from './hooks/useTheme';
 
 export default function Dashboard() {
@@ -26,7 +26,8 @@ export default function Dashboard() {
         { path: '/profile', label: 'Profile Editor', icon: User },
         { path: '/digital-card', label: 'Digital Card', icon: Layout },
         { path: '/security', label: 'Security', icon: KeyRound },
-        { path: '/qr-nfc', label: 'QR & NFC Links', icon: QrCode },
+        { path: '/qr-nfc', label: 'QR Links', icon: QrCode },
+        { path: '/nfc-cards', label: 'NFC Card Manager', icon: CreditCard },
     ];
 
     return (
