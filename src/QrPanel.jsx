@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { QrCode, Link as LinkIcon, Download, Copy, ScanLine, FileText, Wifi } from 'lucide-react';
@@ -6,7 +7,7 @@ import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 
 export default function QrPanel() {
-    const [data, setData] = useState({ qrCodeUrl: '', nfcUrl: '', nfcEnabled: false, uniqueToken: null, isActive: false });
+    const [data, setData] = useState({ qrCodeUrl: '', nfcUrl: '', nfcEnabled: false, uniqueToken: null, isActive: false, isLockedByMaster: false });
     const [loading, setLoading] = useState(true);
     const [qrImage, setQrImage] = useState('');
 
@@ -17,46 +18,56 @@ export default function QrPanel() {
         return `${import.meta.env.VITE_API_URL}/${url}`;
     };
 
-    useEffect(() => {
-        const fetchQrData = async () => {
-            try {
-                const profileRes = await axios.get(import.meta.env.VITE_API_URL + '/api/auth/profile', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
-                });
-                const qrRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/qr', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
-                });
-                const nfcRes = await axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/nfc', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
-                });
+    const fetcher = async () => {
+        const [profileRes, qrRes, nfcRes] = await Promise.all([
+            axios.get(import.meta.env.VITE_API_URL + '/api/auth/profile', { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } }),
+            axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/qr', { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } }),
+            axios.get(import.meta.env.VITE_API_URL + '/api/sub-admin/nfc', { headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` } })
+        ]);
+        
+        const slug = profileRes.data.slug || profileRes.data.username.split('@')[0];
+        const realCardUrl = nfcRes.data.uniqueToken 
+            ? (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${nfcRes.data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${nfcRes.data.uniqueToken}`)
+            : (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/${slug}` : `https://digital-card-customer-frontend.vercel.app/${slug}`);
 
-                const slug = profileRes.data.slug || profileRes.data.username.split('@')[0];
-                
-                // Construct the actual live URL for this specific sub admin
-                const realCardUrl = nfcRes.data.uniqueToken 
-                    ? (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${nfcRes.data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${nfcRes.data.uniqueToken}`)
-                    : (import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/${slug}` : `https://digital-card-customer-frontend.vercel.app/${slug}`);
+        let generatedQr = '';
+        if (realCardUrl) {
+            generatedQr = await QRCode.toDataURL(realCardUrl, { width: 1024, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+        }
 
-                setData({
-                    qrCodeUrl: qrRes.data.qrCodeUrl,
-                    nfcUrl: realCardUrl,
-                    nfcEnabled: nfcRes.data.nfcEnabled,
-                    uniqueToken: nfcRes.data.uniqueToken,
-                    isActive: nfcRes.data.isActive
-                });
-
-                if (realCardUrl) {
-                    const generatedQr = await QRCode.toDataURL(realCardUrl, { width: 1024, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
-                    setQrImage(generatedQr);
-                }
-            } catch (err) {
-                toast.error('Failed to load QR/NFC data');
-            } finally {
-                setLoading(false);
-            }
+        return {
+            qrCodeUrl: qrRes.data.qrCodeUrl,
+            nfcUrl: realCardUrl,
+            nfcEnabled: nfcRes.data.nfcEnabled,
+            uniqueToken: nfcRes.data.uniqueToken,
+            isActive: nfcRes.data.isActive,
+            isLockedByMaster: nfcRes.data.isLockedByMaster,
+            generatedQr
         };
-        fetchQrData();
-    }, []);
+    };
+
+    const { data: swrData, error } = useSWR('qr-panel-data', fetcher, { revalidateOnFocus: false, refreshInterval: 5000 });
+
+    useEffect(() => {
+        if (swrData) {
+            setData({
+                qrCodeUrl: swrData.qrCodeUrl,
+                nfcUrl: swrData.nfcUrl,
+                nfcEnabled: swrData.nfcEnabled,
+                uniqueToken: swrData.uniqueToken,
+                isActive: swrData.isActive,
+                isLockedByMaster: swrData.isLockedByMaster
+            });
+            if (swrData.generatedQr) {
+                setQrImage(swrData.generatedQr);
+            }
+            setLoading(false);
+        }
+        if (error) {
+            toast.error('Failed to load QR/NFC data');
+            setLoading(false);
+        }
+    }, [swrData, error]);
 
     const copyToClipboard = (forceUrl) => {
         navigator.clipboard.writeText(forceUrl || data.nfcUrl);
@@ -236,28 +247,36 @@ export default function QrPanel() {
                                             {import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`}
                                         </a>
                                         <div className="flex flex-wrap gap-2 self-end sm:self-auto w-full sm:w-auto">
-                                            <button
-                                                onClick={() => {
-                                                    const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
-                                                    handleGenerateAndCopy(url);
-                                                }}
-                                                className="flex-1 sm:flex-initial text-slate-700 hover:text-blue-600 transition-colors px-3 py-2 bg-blue-50 hover:bg-blue-100 focus:outline-none flex items-center justify-center gap-2 rounded-lg border border-blue-200"
-                                                title="Generate Unique URL for 3rd Party NFC Writers"
-                                            >
-                                                <Copy size={16} />
-                                                <span className="text-xs font-semibold whitespace-nowrap">Generate & Copy (3rd Party App)</span>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
-                                                    handleWriteNfc(url);
-                                                }}
-                                                className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg shadow-sm"
-                                                title="Write directly via Web NFC"
-                                            >
-                                                <Wifi size={16} />
-                                                <span className="text-xs font-semibold whitespace-nowrap">Write (Web NFC)</span>
-                                            </button>
+                                            {data.isLockedByMaster ? (
+                                                <span className="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-3 py-2 rounded-lg flex items-center gap-1">
+                                                    🔒 Locked by Master
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
+                                                            handleGenerateAndCopy(url);
+                                                        }}
+                                                        className="flex-1 sm:flex-initial text-slate-700 hover:text-blue-600 transition-colors px-3 py-2 bg-blue-50 hover:bg-blue-100 focus:outline-none flex items-center justify-center gap-2 rounded-lg border border-blue-200"
+                                                        title="Generate Unique URL for 3rd Party NFC Writers"
+                                                    >
+                                                        <Copy size={16} />
+                                                        <span className="text-xs font-semibold whitespace-nowrap">Generate & Copy (3rd Party App)</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const url = import.meta.env.VITE_CUSTOMER_FRONTEND_URL ? `${import.meta.env.VITE_CUSTOMER_FRONTEND_URL}/card/${data.uniqueToken}` : `https://digital-card-customer-frontend.vercel.app/card/${data.uniqueToken}`;
+                                                            handleWriteNfc(url);
+                                                        }}
+                                                        className="flex-1 sm:flex-initial text-white bg-purple-600 hover:bg-purple-700 transition-colors px-3 py-2 focus:outline-none flex items-center justify-center gap-2 rounded-lg shadow-sm"
+                                                        title="Write directly via Web NFC"
+                                                    >
+                                                        <Wifi size={16} />
+                                                        <span className="text-xs font-semibold whitespace-nowrap">Write (Web NFC)</span>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-4 leading-relaxed bg-white/60 dark:bg-slate-800/80 inline-block px-3 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-700">
