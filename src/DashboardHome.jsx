@@ -254,10 +254,6 @@ export default function DashboardHome() {
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Boost Your Profile Visibility</h3>
                         <p className="text-slate-600 dark:text-slate-400 max-w-xl">Share your Digital Card on social networks and attach it to your email signature to actively increase traffic and capture more leads.</p>
                     </div>
-                    <button onClick={() => window.location.href = '/qr-nfc'} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 whitespace-nowrap whitespace-nowrap text-sm flex items-center gap-2">
-                        <Share2 size={18} />
-                        Get Share Links
-                    </button>
                 </div>
             </div>
         </div>

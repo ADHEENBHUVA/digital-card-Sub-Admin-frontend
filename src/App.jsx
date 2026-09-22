@@ -11,7 +11,6 @@ const Login = lazy(() => import('./Login'));
 const Dashboard = lazy(() => import('./Dashboard'));
 const ProfileForm = lazy(() => import('./ProfileForm'));
 const SecurityForm = lazy(() => import('./SecurityForm'));
-const QrPanel = lazy(() => import('./QrPanel'));
 const DigitalCardConfig = lazy(() => import('./DigitalCardConfig'));
 const DashboardHome = lazy(() => import('./DashboardHome'));
 const NfcCardManagement = lazy(() => import('./NfcCardManagement'));
@@ -76,7 +75,6 @@ function App() {
                             <Route path="profile" element={<ProfileForm />} />
                             <Route path="security" element={<SecurityForm />} />
                             <Route path="digital-card" element={<DigitalCardConfig />} />
-                            <Route path="qr-nfc" element={<QrPanel />} />
                             <Route path="nfc-cards" element={<NfcCardManagement />} />
                         </Route>
 

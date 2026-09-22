@@ -26,7 +26,6 @@ export default function Dashboard() {
         { path: '/profile', label: 'Profile Editor', icon: User },
         { path: '/digital-card', label: 'Digital Card', icon: Layout },
         { path: '/security', label: 'Security', icon: KeyRound },
-        { path: '/qr-nfc', label: 'QR Links', icon: QrCode },
         { path: '/nfc-cards', label: 'NFC Card Manager', icon: CreditCard },
     ];
 
