@@ -5,13 +5,16 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Eye, TrendingUp, Smartphone, Globe, Share2, MousePointerClick } from 'lucide-react';
 
 export default function DashboardHome() {
-    const [stats, setStats] = useState({
-        cardViews: 0,
-        landingViews: 0
+    const [stats, setStats] = useState(() => {
+        const saved = sessionStorage.getItem('sa_dashboardStats');
+        return saved ? JSON.parse(saved) : { cardViews: 0, landingViews: 0 };
     });
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => !sessionStorage.getItem('sa_dashboardStats'));
     const [slug, setSlug] = useState('');
-    const [trafficData, setTrafficData] = useState([]);
+    const [trafficData, setTrafficData] = useState(() => {
+        const saved = sessionStorage.getItem('sa_trafficData');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     const generateTrafficData = (dailyViews = []) => {
         const result = [];
@@ -54,6 +57,7 @@ export default function DashboardHome() {
 
                 setStats(prevStats => {
                     if (JSON.stringify(prevStats) !== JSON.stringify(newStats)) {
+                        sessionStorage.setItem('sa_dashboardStats', JSON.stringify(newStats));
                         return newStats;
                     }
                     return prevStats;
@@ -67,6 +71,7 @@ export default function DashboardHome() {
                 const newTrafficData = generateTrafficData(profile.dailyViews || []);
                 setTrafficData(prevTraffic => {
                     if (JSON.stringify(prevTraffic) !== JSON.stringify(newTrafficData)) {
+                        sessionStorage.setItem('sa_trafficData', JSON.stringify(newTrafficData));
                         return newTrafficData;
                     }
                     return prevTraffic;
