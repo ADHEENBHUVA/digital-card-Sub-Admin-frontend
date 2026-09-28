@@ -11,6 +11,7 @@ export default function ProfileForm() {
         profile: { companyName: '', designation: '', address: '' }
     });
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [views, setViews] = useState({ digitalCard: 0, landingPage: 0 });
 
     useEffect(() => {
@@ -61,12 +62,15 @@ export default function ProfileForm() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
+            setIsSaving(true);
             await axios.put(import.meta.env.VITE_API_URL + '/api/sub-admin/profile', formData, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('subAdminToken')}` }
             });
             toast.success('Profile updated successfully');
         } catch (err) {
             toast.error('Failed to update profile');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -175,8 +179,22 @@ export default function ProfileForm() {
                     </section>
 
                     <div className="pt-4 pb-2">
-                        <button type="submit" className="w-full bg-gradient-to-r from-slate-900 to-slate-800 dark:from-blue-600 dark:to-indigo-500 text-white font-bold py-4 rounded-2xl hover:shadow-xl hover:shadow-slate-900/20 transform hover:-translate-y-1 active:scale-[0.98] transition-all tracking-wide text-lg">
-                            Deploy Details
+                        <button 
+                            type="submit" 
+                            disabled={isSaving}
+                            className={`w-full text-white font-bold py-4 rounded-2xl transition-all tracking-wide text-lg flex items-center justify-center gap-2 ${isSaving ? 'bg-slate-500 opacity-70 cursor-not-allowed' : 'bg-gradient-to-r from-slate-900 to-slate-800 dark:from-blue-600 dark:to-indigo-500 hover:shadow-xl hover:shadow-slate-900/20 transform hover:-translate-y-1 active:scale-[0.98]'}`}
+                        >
+                            {isSaving ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Saving...
+                                </>
+                            ) : (
+                                'Deploy Details'
+                            )}
                         </button>
                     </div>
                 </form>
